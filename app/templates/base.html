@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trekk Management App - Manage treks, bookings, and staff efficiently">
+    <title>{% block title %}Trekk Management{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <span class="brand-icon">&#9968;</span>
+            <span>Trekk Management</span>
+        </a>
+
+        <div style="display: flex; align-items: center; gap: 16px;">
+            {% if current_user.is_authenticated %}
+                <div class="user-info">
+                    <span class="username">{{ current_user.username }}</span>
+                    <span class="role-badge {{ current_user.role }}">{{ current_user.role | replace('_', ' ') }}</span>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="btn-logout">Logout</a>
+            {% else %}
+                <ul class="navbar-nav">
+                    <li><a href="{{ url_for('auth.login') }}" class="{% if request.endpoint == 'auth.login' %}active{% endif %}">Login</a></li>
+                    <li><a href="{{ url_for('auth.register_trekker') }}" class="{% if request.endpoint == 'auth.register_trekker' %}active{% endif %}">Register</a></li>
+                </ul>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages" style="padding-top: 1rem;">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        {% if category == 'success' %}&#10003;
+                        {% elif category == 'error' %}&#10007;
+                        {% elif category == 'warning' %}&#9888;
+                        {% elif category == 'info' %}&#8505;
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Dashboard - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#127956; Staff Dashboard</h1>
+    <p>Welcome, {{ current_user.username }}! Manage your assigned treks here.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-icon">&#9968;</div>
+        <div class="stat-value">{{ stats.assigned_treks }}</div>
+        <div class="stat-label">Assigned Treks</div>
+    </div>
+</div>
+
+{% if stats.assigned_treks == 0 %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128204;</div>
+    <h3>No treks assigned yet</h3>
+    <p>An admin will assign treks to you. Please check back later.</p>
+</div>
+{% endif %}
+{% endblock %}

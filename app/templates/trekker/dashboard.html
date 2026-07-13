@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}My Dashboard - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#127757; My Dashboard</h1>
+    <p>Welcome, {{ current_user.username }}! Explore and book your next adventure.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card green">
+        <div class="stat-icon">&#128203;</div>
+        <div class="stat-value">{{ stats.total_bookings }}</div>
+        <div class="stat-label">Total Bookings</div>
+    </div>
+
+    <div class="stat-card blue">
+        <div class="stat-icon">&#9989;</div>
+        <div class="stat-value">{{ stats.active_bookings }}</div>
+        <div class="stat-label">Active Bookings</div>
+    </div>
+</div>
+
+{% if stats.total_bookings == 0 %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#127956;</div>
+    <h3>No bookings yet</h3>
+    <p>Start exploring available treks and book your first adventure!</p>
+</div>
+{% endif %}
+{% endblock %}
