@@ -1,0 +1,31 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Instance folder (database)
+instance/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Migration versions (keep structure, ignore auto-generated)
+# migrations/versions/
+
+# Environment variables
+.env
+.flaskenv
+
+# Temp files
+*.log
+verify_db.py
