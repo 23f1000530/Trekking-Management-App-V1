@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Treks - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-row">
+        <div>
+            <h1>&#9968; Trek Management</h1>
+            <p>Create, edit, and manage all treks</p>
+        </div>
+        <a href="{{ url_for('admin_bp.create_trek') }}" class="btn btn-primary btn-action">&#10133; Create New Trek</a>
+    </div>
+</div>
+
+{% if treks %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Difficulty</th>
+                <th>Duration</th>
+                <th>Price</th>
+                <th>Slots</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trek in treks %}
+            <tr>
+                <td>#{{ trek.id }}</td>
+                <td class="td-bold">{{ trek.name }}</td>
+                <td>{{ trek.location or '—' }}</td>
+                <td><span class="difficulty-badge {{ trek.difficulty }}">{{ trek.difficulty }}</span></td>
+                <td>{{ trek.duration_days }} day{{ 's' if trek.duration_days != 1 }}</td>
+                <td>&#8377;{{ "%.0f"|format(trek.price) }}</td>
+                <td>
+                    <span class="slot-info">{{ trek.available_slots }}/{{ trek.max_slots }}</span>
+                </td>
+                <td><span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span></td>
+                <td class="td-actions">
+                    <a href="{{ url_for('admin_bp.edit_trek', trek_id=trek.id) }}" class="btn btn-sm btn-secondary" title="Edit">&#9998; Edit</a>
+                    <form method="POST" action="{{ url_for('admin_bp.delete_trek', trek_id=trek.id) }}" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this trek? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">&#128465; Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#9968;</div>
+    <h3>No treks created yet</h3>
+    <p>Click the button above to create your first trek.</p>
+</div>
+{% endif %}
+{% endblock %}

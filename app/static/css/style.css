@@ -26,6 +26,7 @@
     --accent-warning: #f59e0b;
     --accent-danger: #ef4444;
     --accent-info: #3b82f6;
+    --accent-teal: #14b8a6;
 
     /* Text Colors */
     --text-primary: #f9fafb;
@@ -145,7 +146,7 @@ a:hover {
 .navbar-nav {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     list-style: none;
 }
 
@@ -153,12 +154,13 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: var(--radius-sm);
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: all var(--transition-fast);
+    white-space: nowrap;
 }
 
 .navbar-nav a:hover {
@@ -402,6 +404,76 @@ select.form-control {
     gap: 1rem;
 }
 
+.form-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.form-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0.5rem 0;
+}
+
+.form-divider::before,
+.form-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+/* Form Grid for create/edit forms */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 0.3s ease;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Inline form row (for assign staff) */
+.form-row-inline {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.form-row-inline .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.form-group-btn {
+    flex: 0 0 auto !important;
+}
+
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn {
     display: inline-flex;
@@ -421,7 +493,6 @@ select.form-control {
 }
 
 .btn-primary {
-    width: 100%;
     background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
     color: white;
     box-shadow: 0 4px 14px var(--accent-primary-glow);
@@ -447,6 +518,49 @@ select.form-control {
     background: var(--bg-glass-hover);
     color: var(--text-primary);
     border-color: var(--border-color-hover);
+}
+
+.btn-action {
+    width: auto;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    gap: 5px;
+}
+
+.btn-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+    background: rgba(16, 185, 129, 0.25);
+    color: #6ee7b7;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+}
+
+.btn-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:hover {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fde68a;
 }
 
 /* ── Auth Links ──────────────────────────────────────────────────── */
@@ -499,9 +613,16 @@ select.form-control {
     font-size: 0.95rem;
 }
 
+.header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1.25rem;
     margin-bottom: 2rem;
 }
@@ -515,6 +636,13 @@ select.form-control {
     transition: all var(--transition-base);
     position: relative;
     overflow: hidden;
+}
+
+.stat-card.clickable {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
 .stat-card::before {
@@ -532,6 +660,7 @@ select.form-control {
 .stat-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 .stat-card.amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .stat-card.red::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+.stat-card.teal::before { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
 
 .stat-card:hover {
     border-color: var(--border-color-hover);
@@ -557,6 +686,514 @@ select.form-control {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
+}
+
+/* ── Section Headers ─────────────────────────────────────────────── */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.section-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* ── Section Cards ───────────────────────────────────────────────── */
+.section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+    animation: fadeInUp 0.3s ease;
+}
+
+.section-card .section-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-card.warning-section {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ── Quick Actions ───────────────────────────────────────────────── */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    color: var(--text-secondary);
+}
+
+.action-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    color: var(--accent-primary);
+}
+
+.action-icon {
+    font-size: 2rem;
+}
+
+.action-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* ── Data Tables ─────────────────────────────────────────────────── */
+.data-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.data-table thead {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.data-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+.data-table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table .td-bold {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.data-table .td-actions {
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.row-inactive {
+    opacity: 0.5;
+}
+
+.row-inactive:hover {
+    opacity: 0.8;
+}
+
+/* ── Status Badges ───────────────────────────────────────────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-badge.status-open,
+.status-badge.status-confirmed,
+.status-badge.status-paid {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.status-pending,
+.status-badge.status-unpaid {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.status-cancelled,
+.status-badge.status-refunded,
+.status-badge.status-closed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.status-ongoing {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.status-badge.status-completed {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* ── Difficulty Badges ───────────────────────────────────────────── */
+.difficulty-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.difficulty-badge.easy {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.difficulty-badge.moderate {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.difficulty-badge.hard {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.difficulty-badge.extreme {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+/* ── Slot Info ────────────────────────────────────────────────────── */
+.slot-info {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+/* ── Assignment List (Staff page) ────────────────────────────────── */
+.assignment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.assignment-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.assignment-trek {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 2px 8px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.btn-unassign {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    font-size: 0.6rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-unassign:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+/* ── Search ───────────────────────────────────────────────────────── */
+.search-container {
+    margin-bottom: 2rem;
+}
+
+.search-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.search-category {
+    width: 150px;
+    flex: 0 0 150px;
+}
+
+.search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Trek Cards (Staff Dashboard) ────────────────────────────────── */
+.trek-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
+
+.trek-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    animation: fadeInUp 0.3s ease;
+}
+
+.trek-card:hover {
+    border-color: var(--border-color-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.trek-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.trek-card-header h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.trek-card-body {
+    padding: 1.25rem 1.5rem;
+}
+
+.trek-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.trek-info-row:last-child {
+    border-bottom: none;
+}
+
+.trek-info-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.trekker-count {
+    font-weight: 700;
+    color: var(--accent-primary);
+    font-size: 1.1rem;
+}
+
+.trek-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.trek-card-actions .btn {
+    flex: 1;
+}
+
+/* ── Management Grid (Trek Detail) ───────────────────────────────── */
+.management-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Status Options */
+.current-status {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.status-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.status-option:hover {
+    border-color: var(--border-color-hover);
+    background: var(--bg-glass-hover);
+}
+
+.status-option input[type="radio"] {
+    accent-color: var(--accent-primary);
+}
+
+.status-option.selected,
+.status-option:has(input:checked) {
+    border-color: var(--accent-primary);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-primary);
+}
+
+/* Slot Display */
+.slot-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.slot-current {
+    text-align: center;
+}
+
+.slot-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+    line-height: 1;
+}
+
+.slot-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.slot-divider {
+    font-size: 2rem;
+    color: var(--text-muted);
+    font-weight: 300;
+}
+
+/* Detail Grid */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.detail-item {
+    padding: 1rem;
+    background: var(--bg-glass);
+    border-radius: var(--radius-sm);
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ── Text Utilities ──────────────────────────────────────────────── */
+.text-muted {
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 /* ── Empty State ─────────────────────────────────────────────────── */
@@ -617,9 +1254,29 @@ select.form-control {
 }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .management-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .navbar {
         padding: 0 1rem;
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 64px;
+        gap: 8px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .navbar-nav {
+        flex-wrap: wrap;
     }
 
     .auth-card {
@@ -630,12 +1287,57 @@ select.form-control {
         grid-template-columns: 1fr;
     }
 
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid .full-width {
+        grid-column: 1;
+    }
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
     }
 
     .main-content {
         padding: 1rem;
+    }
+
+    .header-row {
+        flex-direction: column;
+    }
+
+    .form-row-inline {
+        flex-direction: column;
+    }
+
+    .search-input-group {
+        flex-direction: column;
+    }
+
+    .search-category {
+        width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .trek-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .data-table .td-actions {
+        flex-direction: column;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item.full-width {
+        grid-column: 1;
     }
 }
 
@@ -645,11 +1347,19 @@ select.form-control {
     }
 
     .navbar-nav {
-        gap: 4px;
+        gap: 2px;
     }
 
     .navbar-nav a {
-        padding: 6px 10px;
-        font-size: 0.8rem;
+        padding: 6px 8px;
+        font-size: 0.7rem;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .status-options {
+        flex-direction: column;
     }
 }

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Staff - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128101; Staff Management</h1>
+    <p>Approve, manage, and assign trek staff</p>
+</div>
+
+<!-- Assign Staff to Trek -->
+<div class="section-card">
+    <div class="section-header">
+        <h2>&#128204; Assign Staff to Trek</h2>
+    </div>
+    <form method="POST" action="{{ url_for('admin_bp.assign_staff') }}" class="assign-form">
+        <div class="form-row-inline">
+            <div class="form-group">
+                <label for="staff_id">Staff Member</label>
+                <select id="staff_id" name="staff_id" class="form-control" required>
+                    <option value="">Select staff member...</option>
+                    {% for s in staff_list %}
+                    {% if s.is_approved and s.is_active %}
+                    <option value="{{ s.id }}">{{ s.username }} ({{ s.staff_profile.full_name if s.staff_profile else s.username }})</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="trek_id">Trek</label>
+                <select id="trek_id" name="trek_id" class="form-control" required>
+                    <option value="">Select trek...</option>
+                    {% for t in treks %}
+                    <option value="{{ t.id }}">{{ t.name }} ({{ t.status }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-group-btn">
+                <button type="submit" class="btn btn-primary btn-action">&#128204; Assign</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Pending Approvals -->
+{% set pending = staff_list | selectattr('is_approved', 'false') | list %}
+{% if pending %}
+<div class="section-card warning-section">
+    <div class="section-header">
+        <h2>&#9203; Pending Approvals ({{ pending|length }})</h2>
+    </div>
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Experience</th>
+                    <th>Specialization</th>
+                    <th>Registered</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in pending %}
+                <tr>
+                    <td>#{{ s.id }}</td>
+                    <td class="td-bold">{{ s.username }}</td>
+                    <td>{{ s.staff_profile.full_name if s.staff_profile else '—' }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.staff_profile.experience_years if s.staff_profile else 0 }} yrs</td>
+                    <td>{{ s.staff_profile.specialization if s.staff_profile and s.staff_profile.specialization else '—' }}</td>
+                    <td>{{ s.created_at.strftime('%d %b %Y') if s.created_at else 'N/A' }}</td>
+                    <td class="td-actions">
+                        <form method="POST" action="{{ url_for('admin_bp.approve_staff', user_id=s.id) }}" class="inline-form">
+                            <button type="submit" class="btn btn-sm btn-success">&#10003; Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_bp.reject_staff', user_id=s.id) }}" class="inline-form" onsubmit="return confirm('Are you sure you want to reject and remove this staff member?');">
+                            <button type="submit" class="btn btn-sm btn-danger">&#10007; Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Staff -->
+<div class="section-card">
+    <div class="section-header">
+        <h2>All Staff Members</h2>
+    </div>
+    {% set approved_staff = staff_list | selectattr('is_approved') | list %}
+    {% if approved_staff %}
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Experience</th>
+                    <th>Status</th>
+                    <th>Assigned Treks</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in approved_staff %}
+                <tr class="{{ 'row-inactive' if not s.is_active }}">
+                    <td>#{{ s.id }}</td>
+                    <td class="td-bold">{{ s.username }}</td>
+                    <td>{{ s.staff_profile.full_name if s.staff_profile else '—' }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.staff_profile.experience_years if s.staff_profile else 0 }} yrs</td>
+                    <td>
+                        {% if s.is_active %}
+                        <span class="status-badge status-confirmed">Active</span>
+                        {% else %}
+                        <span class="status-badge status-cancelled">Blacklisted</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set active_assignments = s.trek_assignments.filter_by(is_active=True).all() %}
+                        {% if active_assignments %}
+                        <div class="assignment-list">
+                            {% for a in active_assignments %}
+                            <div class="assignment-item">
+                                <span class="assignment-trek">{{ a.trek.name }}</span>
+                                <form method="POST" action="{{ url_for('admin_bp.unassign_staff', assignment_id=a.id) }}" class="inline-form">
+                                    <button type="submit" class="btn-unassign" title="Remove assignment">&#10005;</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="td-actions">
+                        <form method="POST" action="{{ url_for('admin_bp.toggle_staff_active', user_id=s.id) }}" class="inline-form">
+                            {% if s.is_active %}
+                            <button type="submit" class="btn btn-sm btn-warning" title="Deactivate">&#128683; Blacklist</button>
+                            {% else %}
+                            <button type="submit" class="btn btn-sm btn-success" title="Activate">&#10003; Activate</button>
+                            {% endif %}
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_bp.reject_staff', user_id=s.id) }}" class="inline-form" onsubmit="return confirm('Remove this staff member permanently?');">
+                            <button type="submit" class="btn btn-sm btn-danger" title="Remove">&#128465; Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">&#128101;</div>
+        <h3>No approved staff members</h3>
+        <p>Staff members will appear here once they are approved.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

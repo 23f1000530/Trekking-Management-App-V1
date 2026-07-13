@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Search - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128269; Search</h1>
+    <p>Search treks, staff, or users by name or ID</p>
+</div>
+
+<div class="search-container">
+    <form method="GET" action="{{ url_for('admin_bp.search') }}" class="search-form">
+        <div class="search-input-group">
+            <input type="text" name="q" class="form-control search-input" placeholder="Search by name, email, or ID..." value="{{ query }}" autofocus>
+            <select name="category" class="form-control search-category">
+                <option value="all" {{ 'selected' if category == 'all' }}>All</option>
+                <option value="treks" {{ 'selected' if category == 'treks' }}>Treks</option>
+                <option value="staff" {{ 'selected' if category == 'staff' }}>Staff</option>
+                <option value="users" {{ 'selected' if category == 'users' }}>Users</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-action">&#128269; Search</button>
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<div class="search-results">
+    <!-- Trek Results -->
+    {% if results.treks %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#9968; Treks ({{ results.treks|length }})</h2>
+        </div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Difficulty</th>
+                        <th>Status</th>
+                        <th>Slots</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trek in results.treks %}
+                    <tr>
+                        <td>#{{ trek.id }}</td>
+                        <td class="td-bold">{{ trek.name }}</td>
+                        <td>{{ trek.location or '—' }}</td>
+                        <td><span class="difficulty-badge {{ trek.difficulty }}">{{ trek.difficulty }}</span></td>
+                        <td><span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span></td>
+                        <td>{{ trek.available_slots }}/{{ trek.max_slots }}</td>
+                        <td><a href="{{ url_for('admin_bp.edit_trek', trek_id=trek.id) }}" class="btn btn-sm btn-secondary">&#9998; Edit</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Staff Results -->
+    {% if results.staff %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#128101; Staff ({{ results.staff|length }})</h2>
+        </div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Approved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in results.staff %}
+                    <tr>
+                        <td>#{{ s.id }}</td>
+                        <td class="td-bold">{{ s.username }}</td>
+                        <td>{{ s.email }}</td>
+                        <td>
+                            {% if s.is_active %}
+                            <span class="status-badge status-confirmed">Active</span>
+                            {% else %}
+                            <span class="status-badge status-cancelled">Blacklisted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.is_approved %}
+                            <span class="status-badge status-confirmed">Approved</span>
+                            {% else %}
+                            <span class="status-badge status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- User Results -->
+    {% if results.users %}
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#128100; Users ({{ results.users|length }})</h2>
+        </div>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in results.users %}
+                    <tr>
+                        <td>#{{ u.id }}</td>
+                        <td class="td-bold">{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            {% if u.is_active %}
+                            <span class="status-badge status-confirmed">Active</span>
+                            {% else %}
+                            <span class="status-badge status-cancelled">Blacklisted</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.created_at.strftime('%d %b %Y') if u.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not results.treks and not results.staff and not results.users %}
+    <div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+        <div class="empty-icon">&#128269;</div>
+        <h3>No results found</h3>
+        <p>No matches found for "{{ query }}". Try a different search term.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

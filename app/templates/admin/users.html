@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128100; User Management</h1>
+    <p>View and manage all registered trekkers</p>
+</div>
+
+{% if users %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Bookings</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="{{ 'row-inactive' if not user.is_active }}">
+                <td>#{{ user.id }}</td>
+                <td class="td-bold">{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.is_active %}
+                    <span class="status-badge status-confirmed">Active</span>
+                    {% else %}
+                    <span class="status-badge status-cancelled">Blacklisted</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.bookings.count() }}</td>
+                <td>{{ user.created_at.strftime('%d %b %Y') if user.created_at else 'N/A' }}</td>
+                <td class="td-actions">
+                    <form method="POST" action="{{ url_for('admin_bp.toggle_user_active', user_id=user.id) }}" class="inline-form">
+                        {% if user.is_active %}
+                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Blacklist user {{ user.username }}?')">&#128683; Blacklist</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-success">&#10003; Activate</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128100;</div>
+    <h3>No registered trekkers</h3>
+    <p>Users will appear here once they register.</p>
+</div>
+{% endif %}
+{% endblock %}

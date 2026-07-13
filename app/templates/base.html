@@ -18,6 +18,26 @@
 
         <div style="display: flex; align-items: center; gap: 16px;">
             {% if current_user.is_authenticated %}
+                <!-- Admin Sub-Navigation -->
+                {% if current_user.is_admin %}
+                <ul class="navbar-nav">
+                    <li><a href="{{ url_for('admin_bp.dashboard') }}" class="{% if request.endpoint == 'admin_bp.dashboard' %}active{% endif %}">&#9881; Dashboard</a></li>
+                    <li><a href="{{ url_for('admin_bp.treks') }}" class="{% if request.endpoint in ['admin_bp.treks', 'admin_bp.create_trek', 'admin_bp.edit_trek'] %}active{% endif %}">&#9968; Treks</a></li>
+                    <li><a href="{{ url_for('admin_bp.staff') }}" class="{% if request.endpoint in ['admin_bp.staff', 'admin_bp.assign_staff'] %}active{% endif %}">&#128101; Staff</a></li>
+                    <li><a href="{{ url_for('admin_bp.users') }}" class="{% if request.endpoint == 'admin_bp.users' %}active{% endif %}">&#128100; Users</a></li>
+                    <li><a href="{{ url_for('admin_bp.bookings') }}" class="{% if request.endpoint == 'admin_bp.bookings' %}active{% endif %}">&#128203; Bookings</a></li>
+                    <li><a href="{{ url_for('admin_bp.search') }}" class="{% if request.endpoint == 'admin_bp.search' %}active{% endif %}">&#128269; Search</a></li>
+                </ul>
+                {% endif %}
+
+                <!-- Staff Sub-Navigation -->
+                {% if current_user.is_trek_staff %}
+                <ul class="navbar-nav">
+                    <li><a href="{{ url_for('staff_bp.dashboard') }}" class="{% if request.endpoint == 'staff_bp.dashboard' %}active{% endif %}">&#127956; Dashboard</a></li>
+                    <li><a href="{{ url_for('staff_bp.profile') }}" class="{% if request.endpoint == 'staff_bp.profile' %}active{% endif %}">&#128100; Profile</a></li>
+                </ul>
+                {% endif %}
+
                 <div class="user-info">
                     <span class="username">{{ current_user.username }}</span>
                     <span class="role-badge {{ current_user.role }}">{{ current_user.role | replace('_', ' ') }}</span>

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Records - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128203; Booking Records</h1>
+    <p>View all booking records and trekking history</p>
+</div>
+
+{% if bookings %}
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card green">
+        <div class="stat-value">{{ bookings | selectattr('booking_status', 'equalto', 'confirmed') | list | length }}</div>
+        <div class="stat-label">Confirmed</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-value">{{ bookings | selectattr('booking_status', 'equalto', 'pending') | list | length }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-value">{{ bookings | selectattr('booking_status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-value">{{ bookings | selectattr('booking_status', 'equalto', 'completed') | list | length }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Trekker</th>
+                <th>Trek</th>
+                <th>Participants</th>
+                <th>Amount</th>
+                <th>Booking Status</th>
+                <th>Payment</th>
+                <th>Booking Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>#{{ booking.id }}</td>
+                <td class="td-bold">{{ booking.user.username if booking.user else 'Deleted User' }}</td>
+                <td>{{ booking.trek.name if booking.trek else 'Deleted Trek' }}</td>
+                <td>{{ booking.number_of_participants }}</td>
+                <td>&#8377;{{ "%.0f"|format(booking.total_amount) }}</td>
+                <td><span class="status-badge status-{{ booking.booking_status }}">{{ booking.booking_status }}</span></td>
+                <td><span class="status-badge status-{{ booking.payment_status }}">{{ booking.payment_status }}</span></td>
+                <td>{{ booking.booking_date.strftime('%d %b %Y, %H:%M') if booking.booking_date else 'N/A' }}</td>
+                <td>{{ booking.notes[:50] + '...' if booking.notes and booking.notes|length > 50 else (booking.notes or '—') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128203;</div>
+    <h3>No bookings yet</h3>
+    <p>Booking records will appear here once trekkers make reservations.</p>
+</div>
+{% endif %}
+{% endblock %}
