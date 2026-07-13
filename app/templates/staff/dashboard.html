@@ -14,9 +14,72 @@
         <div class="stat-value">{{ stats.assigned_treks }}</div>
         <div class="stat-label">Assigned Treks</div>
     </div>
+    <div class="stat-card green">
+        <div class="stat-icon">&#128100;</div>
+        <div class="stat-value">{{ stats.total_trekkers }}</div>
+        <div class="stat-label">Total Trekkers</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon">&#128275;</div>
+        <div class="stat-value">{{ stats.open_treks }}</div>
+        <div class="stat-label">Open Treks</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-icon">&#9889;</div>
+        <div class="stat-value">{{ stats.ongoing_treks }}</div>
+        <div class="stat-label">Ongoing Treks</div>
+    </div>
 </div>
 
-{% if stats.assigned_treks == 0 %}
+<!-- Assigned Treks -->
+<div class="section-header">
+    <h2>Your Assigned Treks</h2>
+</div>
+
+{% if trek_data %}
+<div class="trek-cards-grid">
+    {% for td in trek_data %}
+    <div class="trek-card">
+        <div class="trek-card-header">
+            <h3>{{ td.trek.name }}</h3>
+            <span class="status-badge status-{{ td.trek.status }}">{{ td.trek.status }}</span>
+        </div>
+        <div class="trek-card-body">
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128205; Location</span>
+                <span>{{ td.trek.location or '—' }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Duration</span>
+                <span>{{ td.trek.duration_days }} day{{ 's' if td.trek.duration_days != 1 }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#127919; Difficulty</span>
+                <span class="difficulty-badge {{ td.trek.difficulty }}">{{ td.trek.difficulty }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128101; Trekkers</span>
+                <span class="trekker-count">{{ td.trekker_count }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128178; Slots</span>
+                <span class="slot-info">{{ td.trek.available_slots }}/{{ td.trek.max_slots }} available</span>
+            </div>
+            {% if td.trek.start_date %}
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Start</span>
+                <span>{{ td.trek.start_date.strftime('%d %b %Y') }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="trek-card-actions">
+            <a href="{{ url_for('staff_bp.trek_detail', trek_id=td.trek.id) }}" class="btn btn-primary btn-action btn-sm">&#128065; Manage Trek</a>
+            <a href="{{ url_for('staff_bp.participants', trek_id=td.trek.id) }}" class="btn btn-secondary btn-action btn-sm">&#128101; Participants</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
 <div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
     <div class="empty-icon">&#128204;</div>
     <h3>No treks assigned yet</h3>

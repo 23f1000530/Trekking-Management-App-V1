@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Participants - {{ trek.name }} - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-row">
+        <div>
+            <h1>&#128101; Participants — {{ trek.name }}</h1>
+            <p>All registered users for this trek</p>
+        </div>
+        <a href="{{ url_for('staff_bp.trek_detail', trek_id=trek.id) }}" class="btn btn-secondary btn-action">&larr; Back to Trek</a>
+    </div>
+</div>
+
+{% if participants %}
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card green">
+        <div class="stat-value">{{ participants | selectattr('booking.booking_status', 'equalto', 'confirmed') | list | length }}</div>
+        <div class="stat-label">Confirmed</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-value">{{ participants | selectattr('booking.booking_status', 'equalto', 'pending') | list | length }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-value">{{ participants | selectattr('booking.booking_status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-value">{{ participants | selectattr('booking.booking_status', 'equalto', 'completed') | list | length }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>Trekker</th>
+                <th>Email</th>
+                <th>Participants</th>
+                <th>Amount</th>
+                <th>Booking Status</th>
+                <th>Payment Status</th>
+                <th>Booked On</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in participants %}
+            <tr>
+                <td>#{{ p.booking.id }}</td>
+                <td class="td-bold">{{ p.user.username if p.user else 'Deleted User' }}</td>
+                <td>{{ p.user.email if p.user else 'N/A' }}</td>
+                <td>{{ p.booking.number_of_participants }}</td>
+                <td>&#8377;{{ "%.0f"|format(p.booking.total_amount) }}</td>
+                <td><span class="status-badge status-{{ p.booking.booking_status }}">{{ p.booking.booking_status }}</span></td>
+                <td><span class="status-badge status-{{ p.booking.payment_status }}">{{ p.booking.payment_status }}</span></td>
+                <td>{{ p.booking.created_at.strftime('%d %b %Y, %H:%M') if p.booking.created_at else 'N/A' }}</td>
+                <td>{{ p.booking.notes[:40] + '...' if p.booking.notes and p.booking.notes|length > 40 else (p.booking.notes or '—') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128101;</div>
+    <h3>No participants yet</h3>
+    <p>Trekkers who book this trek will appear here.</p>
+</div>
+{% endif %}
+{% endblock %}

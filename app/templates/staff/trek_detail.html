@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trek.name }} - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-row">
+        <div>
+            <h1>&#9968; {{ trek.name }}</h1>
+            <p>{{ trek.location or 'Location not set' }} &bull; {{ trek.difficulty | title }} &bull; {{ trek.duration_days }} day{{ 's' if trek.duration_days != 1 }}</p>
+        </div>
+        <a href="{{ url_for('staff_bp.dashboard') }}" class="btn btn-secondary btn-action">&larr; Back to Dashboard</a>
+    </div>
+</div>
+
+<!-- Trek Stats -->
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-icon">&#128101;</div>
+        <div class="stat-value">{{ stats.total_participants }}</div>
+        <div class="stat-label">Active Participants</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">&#10003;</div>
+        <div class="stat-value">{{ stats.confirmed }}</div>
+        <div class="stat-label">Confirmed</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-icon">&#9203;</div>
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon">&#10007;</div>
+        <div class="stat-value">{{ stats.cancelled }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+</div>
+
+<!-- Trek Management Actions -->
+<div class="management-grid">
+    <!-- Update Status -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#128260; Update Trek Status</h2>
+        </div>
+        <p class="current-status">Current status: <span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span></p>
+        <form method="POST" action="{{ url_for('staff_bp.update_status', trek_id=trek.id) }}">
+            <div class="status-options">
+                <label class="status-option {{ 'selected' if trek.status == 'open' }}">
+                    <input type="radio" name="status" value="open" {{ 'checked' if trek.status == 'open' }}>
+                    <span class="status-option-label">&#128275; Open</span>
+                </label>
+                <label class="status-option {{ 'selected' if trek.status == 'closed' }}">
+                    <input type="radio" name="status" value="closed" {{ 'checked' if trek.status == 'closed' }}>
+                    <span class="status-option-label">&#128274; Closed</span>
+                </label>
+                <label class="status-option {{ 'selected' if trek.status == 'ongoing' }}">
+                    <input type="radio" name="status" value="ongoing" {{ 'checked' if trek.status == 'ongoing' }}>
+                    <span class="status-option-label">&#9889; Ongoing</span>
+                </label>
+                <label class="status-option {{ 'selected' if trek.status == 'completed' }}">
+                    <input type="radio" name="status" value="completed" {{ 'checked' if trek.status == 'completed' }}>
+                    <span class="status-option-label">&#10003; Completed</span>
+                </label>
+                <label class="status-option {{ 'selected' if trek.status == 'cancelled' }}">
+                    <input type="radio" name="status" value="cancelled" {{ 'checked' if trek.status == 'cancelled' }}>
+                    <span class="status-option-label">&#10007; Cancelled</span>
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-action" style="margin-top: 1rem;">Update Status</button>
+        </form>
+    </div>
+
+    <!-- Update Slots -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#127915; Update Available Slots</h2>
+        </div>
+        <div class="slot-display">
+            <div class="slot-current">
+                <span class="slot-number">{{ trek.available_slots }}</span>
+                <span class="slot-label">Available</span>
+            </div>
+            <span class="slot-divider">/</span>
+            <div class="slot-current">
+                <span class="slot-number">{{ trek.max_slots }}</span>
+                <span class="slot-label">Maximum</span>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('staff_bp.update_slots', trek_id=trek.id) }}">
+            <div class="form-group">
+                <label for="available_slots">Set Available Slots</label>
+                <input type="number" id="available_slots" name="available_slots" class="form-control" min="0" max="{{ trek.max_slots }}" value="{{ trek.available_slots }}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-action">Update Slots</button>
+        </form>
+    </div>
+</div>
+
+<!-- Trek Details -->
+<div class="section-card">
+    <div class="section-header">
+        <h2>Trek Details</h2>
+    </div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">Price</span>
+            <span class="detail-value">&#8377;{{ "%.0f"|format(trek.price) }}</span>
+        </div>
+        {% if trek.start_date %}
+        <div class="detail-item">
+            <span class="detail-label">Start Date</span>
+            <span class="detail-value">{{ trek.start_date.strftime('%d %b %Y') }}</span>
+        </div>
+        {% endif %}
+        {% if trek.end_date %}
+        <div class="detail-item">
+            <span class="detail-label">End Date</span>
+            <span class="detail-value">{{ trek.end_date.strftime('%d %b %Y') }}</span>
+        </div>
+        {% endif %}
+        {% if trek.description %}
+        <div class="detail-item full-width">
+            <span class="detail-label">Description</span>
+            <span class="detail-value">{{ trek.description }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Participants -->
+<div class="section-card">
+    <div class="section-header">
+        <h2>&#128101; Participants</h2>
+        <a href="{{ url_for('staff_bp.participants', trek_id=trek.id) }}" class="btn btn-sm btn-secondary">View All &rarr;</a>
+    </div>
+    {% if participants %}
+    <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Trekker</th>
+                    <th>Email</th>
+                    <th>Participants</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>Booked On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in participants[:10] %}
+                <tr>
+                    <td class="td-bold">{{ p.user.username if p.user else 'Deleted User' }}</td>
+                    <td>{{ p.user.email if p.user else 'N/A' }}</td>
+                    <td>{{ p.booking.number_of_participants }}</td>
+                    <td><span class="status-badge status-{{ p.booking.booking_status }}">{{ p.booking.booking_status }}</span></td>
+                    <td><span class="status-badge status-{{ p.booking.payment_status }}">{{ p.booking.payment_status }}</span></td>
+                    <td>{{ p.booking.created_at.strftime('%d %b %Y') if p.booking.created_at else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">&#128101;</div>
+        <h3>No participants yet</h3>
+        <p>Trekkers who book this trek will appear here.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
