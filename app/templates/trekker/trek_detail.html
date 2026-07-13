@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trek.name }} - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-row">
+        <div>
+            <h1>&#9968; {{ trek.name }}</h1>
+            <p>{{ trek.location or 'Location not set' }} &bull; {{ trek.difficulty | title }} &bull; {{ trek.duration_days }} day{{ 's' if trek.duration_days != 1 }}</p>
+        </div>
+        <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-secondary btn-action">&larr; Back to Treks</a>
+    </div>
+</div>
+
+<div class="trek-detail-layout">
+    <!-- Trek Info -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>Trek Information</h2>
+            <span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span>
+        </div>
+
+        {% if trek.description %}
+        <p class="trek-full-description">{{ trek.description }}</p>
+        {% endif %}
+
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">&#128205; Location</span>
+                <span class="detail-value">{{ trek.location or '—' }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">&#127919; Difficulty</span>
+                <span class="detail-value"><span class="difficulty-badge {{ trek.difficulty }}">{{ trek.difficulty }}</span></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">&#128197; Duration</span>
+                <span class="detail-value">{{ trek.duration_days }} day{{ 's' if trek.duration_days != 1 }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">&#128178; Price per Person</span>
+                <span class="detail-value trek-price">&#8377;{{ "%.0f"|format(trek.price) }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">&#127915; Available Slots</span>
+                <span class="detail-value">
+                    {% if trek.available_slots > 0 %}
+                    {{ trek.available_slots }} of {{ trek.max_slots }}
+                    {% else %}
+                    <span class="status-badge status-closed">Fully Booked</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if trek.start_date %}
+            <div class="detail-item">
+                <span class="detail-label">&#128197; Start Date</span>
+                <span class="detail-value">{{ trek.start_date.strftime('%d %b %Y') }}</span>
+            </div>
+            {% endif %}
+            {% if trek.end_date %}
+            <div class="detail-item">
+                <span class="detail-label">&#128197; End Date</span>
+                <span class="detail-value">{{ trek.end_date.strftime('%d %b %Y') }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Booking Form -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2>&#128203; Book This Trek</h2>
+        </div>
+
+        {% if existing_booking %}
+        <div class="booking-existing">
+            <div class="booking-existing-icon">&#10003;</div>
+            <h3>Already Booked!</h3>
+            <p>You have an active booking for this trek.</p>
+            <div class="booking-existing-details">
+                <div class="detail-item">
+                    <span class="detail-label">Booking Status</span>
+                    <span class="detail-value"><span class="status-badge status-{{ existing_booking.booking_status }}">{{ existing_booking.booking_status }}</span></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Participants</span>
+                    <span class="detail-value">{{ existing_booking.number_of_participants }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Total Amount</span>
+                    <span class="detail-value">&#8377;{{ "%.0f"|format(existing_booking.total_amount) }}</span>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a href="{{ url_for('trekker_bp.my_bookings') }}" class="btn btn-primary btn-action">View My Bookings</a>
+                <form method="POST" action="{{ url_for('trekker_bp.cancel_booking', booking_id=existing_booking.id) }}" class="inline-form" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                    <button type="submit" class="btn btn-danger btn-action">Cancel Booking</button>
+                </form>
+            </div>
+        </div>
+        {% elif trek.status != 'open' %}
+        <div class="booking-closed">
+            <div class="empty-icon">&#128274;</div>
+            <h3>Booking Closed</h3>
+            <p>This trek is currently not accepting bookings (status: {{ trek.status }}).</p>
+        </div>
+        {% elif trek.available_slots <= 0 %}
+        <div class="booking-closed">
+            <div class="empty-icon">&#128683;</div>
+            <h3>Fully Booked</h3>
+            <p>Sorry, all slots for this trek have been filled.</p>
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('trekker_bp.book_trek', trek_id=trek.id) }}">
+            <div class="booking-summary">
+                <div class="form-group">
+                    <label for="participants">Number of Participants</label>
+                    <input type="number" id="participants" name="participants" class="form-control" min="1" max="{{ trek.available_slots }}" value="1" onchange="updateTotal(this.value)">
+                    <small class="form-hint">Maximum {{ trek.available_slots }} participant(s) available</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Special Notes (Optional)</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Any dietary requirements, medical conditions, etc."></textarea>
+                </div>
+
+                <div class="booking-total">
+                    <span class="booking-total-label">Total Amount</span>
+                    <span class="booking-total-value" id="totalAmount">&#8377;{{ "%.0f"|format(trek.price) }}</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-action" onclick="return confirm('Confirm booking for this trek?');">&#10003; Confirm Booking</button>
+                <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-secondary btn-action">Cancel</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateTotal(participants) {
+    const price = {{ trek.price }};
+    const total = price * parseInt(participants || 1);
+    document.getElementById('totalAmount').innerHTML = '&#8377;' + total.toFixed(0);
+}
+</script>
+{% endblock %}

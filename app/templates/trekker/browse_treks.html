@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Treks - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#9968; Explore Treks</h1>
+    <p>Find your next adventure from our open treks</p>
+</div>
+
+<!-- Search & Filter -->
+<div class="search-container">
+    <form method="GET" action="{{ url_for('trekker_bp.browse_treks') }}" class="search-form">
+        <div class="search-input-group">
+            <input type="text" name="search" class="form-control search-input" placeholder="Search treks by name, description, or location..." value="{{ search }}">
+            <button type="submit" class="btn btn-primary btn-action">&#128269; Search</button>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>Difficulty</label>
+                <select name="difficulty" class="form-control">
+                    <option value="">All Difficulties</option>
+                    <option value="easy" {{ 'selected' if difficulty == 'easy' }}>Easy</option>
+                    <option value="moderate" {{ 'selected' if difficulty == 'moderate' }}>Moderate</option>
+                    <option value="hard" {{ 'selected' if difficulty == 'hard' }}>Hard</option>
+                    <option value="extreme" {{ 'selected' if difficulty == 'extreme' }}>Extreme</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Location</label>
+                <select name="location" class="form-control">
+                    <option value="">All Locations</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc }}" {{ 'selected' if location == loc }}>{{ loc }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sort By</label>
+                <select name="sort" class="form-control">
+                    <option value="newest" {{ 'selected' if sort_by == 'newest' }}>Newest First</option>
+                    <option value="price_low" {{ 'selected' if sort_by == 'price_low' }}>Price: Low to High</option>
+                    <option value="price_high" {{ 'selected' if sort_by == 'price_high' }}>Price: High to Low</option>
+                    <option value="duration" {{ 'selected' if sort_by == 'duration' }}>Duration: Short to Long</option>
+                    <option value="name" {{ 'selected' if sort_by == 'name' }}>Name: A to Z</option>
+                </select>
+            </div>
+            <div class="filter-group filter-group-btn">
+                <button type="submit" class="btn btn-secondary btn-action">Apply Filters</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results count -->
+{% if search or difficulty or location %}
+<div class="results-info">
+    <span>{{ treks|length }} trek{{ 's' if treks|length != 1 }} found</span>
+    {% if search or difficulty or location %}
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-sm btn-secondary">Clear Filters</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Trek Grid -->
+{% if treks %}
+<div class="trek-cards-grid">
+    {% for trek in treks %}
+    <div class="trek-card">
+        <div class="trek-card-header">
+            <h3>{{ trek.name }}</h3>
+            <span class="difficulty-badge {{ trek.difficulty }}">{{ trek.difficulty }}</span>
+        </div>
+        <div class="trek-card-body">
+            {% if trek.description %}
+            <p class="trek-description">{{ trek.description[:120] }}{{ '...' if trek.description|length > 120 }}</p>
+            {% endif %}
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128205; Location</span>
+                <span>{{ trek.location or '—' }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Duration</span>
+                <span>{{ trek.duration_days }} day{{ 's' if trek.duration_days != 1 }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128178; Price</span>
+                <span class="trek-price">&#8377;{{ "%.0f"|format(trek.price) }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#127915; Slots</span>
+                {% if trek.available_slots > 0 %}
+                <span class="slot-info">{{ trek.available_slots }}/{{ trek.max_slots }} available</span>
+                {% else %}
+                <span class="status-badge status-closed">Full</span>
+                {% endif %}
+            </div>
+            {% if trek.start_date %}
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Start Date</span>
+                <span>{{ trek.start_date.strftime('%d %b %Y') }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="trek-card-actions">
+            <a href="{{ url_for('trekker_bp.trek_detail', trek_id=trek.id) }}" class="btn btn-primary btn-action btn-sm">&#128065; View Details</a>
+            {% if trek.id in booked_trek_ids %}
+            <span class="btn btn-sm btn-secondary" style="opacity: 0.7; cursor: default;">&#10003; Already Booked</span>
+            {% elif trek.available_slots <= 0 %}
+            <span class="btn btn-sm btn-secondary" style="opacity: 0.7; cursor: default;">&#128683; Full</span>
+            {% else %}
+            <a href="{{ url_for('trekker_bp.trek_detail', trek_id=trek.id) }}" class="btn btn-sm btn-success">&#128203; Book Now</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128269;</div>
+    <h3>No treks found</h3>
+    {% if search or difficulty or location %}
+    <p>No treks match your search criteria. Try adjusting your filters.</p>
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">Clear Filters</a>
+    {% else %}
+    <p>No open treks available right now. Check back later!</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

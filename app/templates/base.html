@@ -38,6 +38,17 @@
                 </ul>
                 {% endif %}
 
+                <!-- Trekker Sub-Navigation -->
+                {% if current_user.is_trekker %}
+                <ul class="navbar-nav">
+                    <li><a href="{{ url_for('trekker_bp.dashboard') }}" class="{% if request.endpoint == 'trekker_bp.dashboard' %}active{% endif %}">&#127757; Dashboard</a></li>
+                    <li><a href="{{ url_for('trekker_bp.browse_treks') }}" class="{% if request.endpoint in ['trekker_bp.browse_treks', 'trekker_bp.trek_detail'] %}active{% endif %}">&#9968; Treks</a></li>
+                    <li><a href="{{ url_for('trekker_bp.my_bookings') }}" class="{% if request.endpoint == 'trekker_bp.my_bookings' %}active{% endif %}">&#128203; Bookings</a></li>
+                    <li><a href="{{ url_for('trekker_bp.history') }}" class="{% if request.endpoint == 'trekker_bp.history' %}active{% endif %}">&#128336; History</a></li>
+                    <li><a href="{{ url_for('trekker_bp.profile') }}" class="{% if request.endpoint == 'trekker_bp.profile' %}active{% endif %}">&#128100; Profile</a></li>
+                </ul>
+                {% endif %}
+
                 <div class="user-info">
                     <span class="username">{{ current_user.username }}</span>
                     <span class="role-badge {{ current_user.role }}">{{ current_user.role | replace('_', ' ') }}</span>

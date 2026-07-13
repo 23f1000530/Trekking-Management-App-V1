@@ -9,24 +9,110 @@
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card green">
+    <a href="{{ url_for('trekker_bp.my_bookings') }}" class="stat-card green clickable">
         <div class="stat-icon">&#128203;</div>
         <div class="stat-value">{{ stats.total_bookings }}</div>
         <div class="stat-label">Total Bookings</div>
-    </div>
+    </a>
 
-    <div class="stat-card blue">
+    <a href="{{ url_for('trekker_bp.my_bookings') }}" class="stat-card blue clickable">
         <div class="stat-icon">&#9989;</div>
         <div class="stat-value">{{ stats.active_bookings }}</div>
         <div class="stat-label">Active Bookings</div>
-    </div>
+    </a>
+
+    <a href="{{ url_for('trekker_bp.history') }}" class="stat-card purple clickable">
+        <div class="stat-icon">&#10003;</div>
+        <div class="stat-value">{{ stats.completed_bookings }}</div>
+        <div class="stat-label">Completed</div>
+    </a>
+
+    <a href="{{ url_for('trekker_bp.history') }}" class="stat-card red clickable">
+        <div class="stat-icon">&#10007;</div>
+        <div class="stat-value">{{ stats.cancelled_bookings }}</div>
+        <div class="stat-label">Cancelled</div>
+    </a>
 </div>
 
-{% if stats.total_bookings == 0 %}
-<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+<!-- Quick Actions -->
+<div class="section-header">
+    <h2>Quick Actions</h2>
+</div>
+<div class="quick-actions">
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="action-card">
+        <div class="action-icon">&#9968;</div>
+        <div class="action-label">Browse Treks</div>
+    </a>
+    <a href="{{ url_for('trekker_bp.my_bookings') }}" class="action-card">
+        <div class="action-icon">&#128203;</div>
+        <div class="action-label">My Bookings</div>
+    </a>
+    <a href="{{ url_for('trekker_bp.history') }}" class="action-card">
+        <div class="action-icon">&#128336;</div>
+        <div class="action-label">Trek History</div>
+    </a>
+    <a href="{{ url_for('trekker_bp.profile') }}" class="action-card">
+        <div class="action-icon">&#128100;</div>
+        <div class="action-label">My Profile</div>
+    </a>
+</div>
+
+<!-- Upcoming Treks -->
+{% if upcoming_treks %}
+<div class="section-header" style="margin-top: 2rem;">
+    <h2>&#128197; Upcoming Treks</h2>
+    <a href="{{ url_for('trekker_bp.my_bookings') }}" class="btn btn-sm btn-secondary">View All &rarr;</a>
+</div>
+<div class="trek-cards-grid">
+    {% for item in upcoming_treks[:3] %}
+    <div class="trek-card">
+        <div class="trek-card-header">
+            <h3>{{ item.trek.name }}</h3>
+            <span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.booking_status }}</span>
+        </div>
+        <div class="trek-card-body">
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128205; Location</span>
+                <span>{{ item.trek.location or '—' }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#127919; Difficulty</span>
+                <span class="difficulty-badge {{ item.trek.difficulty }}">{{ item.trek.difficulty }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Duration</span>
+                <span>{{ item.trek.duration_days }} day{{ 's' if item.trek.duration_days != 1 }}</span>
+            </div>
+            {% if item.trek.start_date %}
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128197; Start Date</span>
+                <span>{{ item.trek.start_date.strftime('%d %b %Y') }}</span>
+            </div>
+            {% endif %}
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128101; Participants</span>
+                <span>{{ item.booking.number_of_participants }}</span>
+            </div>
+            <div class="trek-info-row">
+                <span class="trek-info-label">&#128178; Amount</span>
+                <span>&#8377;{{ "%.0f"|format(item.booking.total_amount) }}</span>
+            </div>
+        </div>
+        <div class="trek-card-actions">
+            <a href="{{ url_for('trekker_bp.trek_detail', trek_id=item.trek.id) }}" class="btn btn-primary btn-action btn-sm">&#128065; View Trek</a>
+            <form method="POST" action="{{ url_for('trekker_bp.cancel_booking', booking_id=item.booking.id) }}" class="inline-form" style="flex: 1;" onsubmit="return confirm('Cancel this booking?');">
+                <button type="submit" class="btn btn-danger btn-action btn-sm" style="width: 100%;">&#10007; Cancel</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-top: 2rem;">
     <div class="empty-icon">&#127956;</div>
-    <h3>No bookings yet</h3>
+    <h3>No upcoming treks</h3>
     <p>Start exploring available treks and book your first adventure!</p>
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">&#9968; Browse Treks</a>
 </div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128203; My Bookings</h1>
+    <p>Track all your trek bookings and their status</p>
+</div>
+
+{% if booking_data %}
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card green">
+        <div class="stat-value">{{ booking_data | selectattr('booking.booking_status', 'equalto', 'confirmed') | list | length }}</div>
+        <div class="stat-label">Confirmed</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="stat-value">{{ booking_data | selectattr('booking.booking_status', 'equalto', 'pending') | list | length }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-value">{{ booking_data | selectattr('booking.booking_status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-value">{{ booking_data | selectattr('booking.booking_status', 'equalto', 'completed') | list | length }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Trek</th>
+                <th>Location</th>
+                <th>Participants</th>
+                <th>Amount</th>
+                <th>Booking Status</th>
+                <th>Payment</th>
+                <th>Trek Status</th>
+                <th>Booked On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in booking_data %}
+            <tr>
+                <td>#{{ item.booking.id }}</td>
+                <td class="td-bold">
+                    {% if item.trek %}
+                    <a href="{{ url_for('trekker_bp.trek_detail', trek_id=item.trek.id) }}">{{ item.trek.name }}</a>
+                    {% else %}
+                    Deleted Trek
+                    {% endif %}
+                </td>
+                <td>{{ item.trek.location if item.trek and item.trek.location else '—' }}</td>
+                <td>{{ item.booking.number_of_participants }}</td>
+                <td>&#8377;{{ "%.0f"|format(item.booking.total_amount) }}</td>
+                <td><span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.booking_status }}</span></td>
+                <td><span class="status-badge status-{{ item.booking.payment_status }}">{{ item.booking.payment_status }}</span></td>
+                <td>
+                    {% if item.trek %}
+                    <span class="status-badge status-{{ item.trek.status }}">{{ item.trek.status }}</span>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ item.booking.created_at.strftime('%d %b %Y') if item.booking.created_at else 'N/A' }}</td>
+                <td class="td-actions">
+                    {% if item.booking.booking_status in ['pending', 'confirmed'] %}
+                    <form method="POST" action="{{ url_for('trekker_bp.cancel_booking', booking_id=item.booking.id) }}" class="inline-form" onsubmit="return confirm('Cancel this booking?');">
+                        <button type="submit" class="btn btn-sm btn-danger">&#10007; Cancel</button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128203;</div>
+    <h3>No bookings yet</h3>
+    <p>You haven't booked any treks yet. Start exploring!</p>
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">&#9968; Browse Treks</a>
+</div>
+{% endif %}
+{% endblock %}

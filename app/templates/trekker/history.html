@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Trekking History - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128336; Trekking History</h1>
+    <p>Your completed and past trek records</p>
+</div>
+
+{% if history_data %}
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card purple">
+        <div class="stat-value">{{ history_data | selectattr('booking.booking_status', 'equalto', 'completed') | list | length }}</div>
+        <div class="stat-label">Completed Treks</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-value">{{ history_data | selectattr('booking.booking_status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+</div>
+
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Trek</th>
+                <th>Location</th>
+                <th>Difficulty</th>
+                <th>Duration</th>
+                <th>Participants</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in history_data %}
+            <tr>
+                <td>#{{ item.booking.id }}</td>
+                <td class="td-bold">{{ item.trek.name if item.trek else 'Deleted Trek' }}</td>
+                <td>{{ item.trek.location if item.trek and item.trek.location else '—' }}</td>
+                <td>
+                    {% if item.trek %}
+                    <span class="difficulty-badge {{ item.trek.difficulty }}">{{ item.trek.difficulty }}</span>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ item.trek.duration_days if item.trek else '—' }} day{{ 's' if item.trek and item.trek.duration_days != 1 }}</td>
+                <td>{{ item.booking.number_of_participants }}</td>
+                <td>&#8377;{{ "%.0f"|format(item.booking.total_amount) }}</td>
+                <td><span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.booking_status }}</span></td>
+                <td><span class="status-badge status-{{ item.booking.payment_status }}">{{ item.booking.payment_status }}</span></td>
+                <td>{{ item.booking.created_at.strftime('%d %b %Y') if item.booking.created_at else 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128336;</div>
+    <h3>No trekking history</h3>
+    <p>Your completed and cancelled treks will appear here.</p>
+    <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">&#9968; Browse Treks</a>
+</div>
+{% endif %}
+{% endblock %}
