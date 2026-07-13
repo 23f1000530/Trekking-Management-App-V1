@@ -53,8 +53,11 @@
         {% endif %}
         {% endif %}
 
-        {% set labels = {'open': '&#128275; Open', 'closed': '&#128274; Closed', 'ongoing': '&#9889; Ongoing',
-                         'completed': '&#10003; Completed', 'cancelled': '&#10007; Cancelled'} %}
+        {# Real Unicode, not HTML entities: these strings print through {{ }},
+           where autoescaping would turn "&#10003;" into literal text — that is
+           also why no |safe filter is needed on the output below. #}
+        {% set labels = {'open': '🔓 Open', 'closed': '🔒 Closed', 'ongoing': '⚡ Ongoing',
+                         'completed': '✓ Completed', 'cancelled': '✗ Cancelled'} %}
         {% set next_states = next_statuses %}
 
         {% if next_states %}
@@ -64,7 +67,7 @@
                 {% for state in next_states %}
                 <label class="status-option">
                     <input type="radio" name="status" value="{{ state }}" required>
-                    <span class="status-option-label">{{ labels.get(state, state | title) | safe }}</span>
+                    <span class="status-option-label">{{ labels.get(state, state | title) }}</span>
                 </label>
                 {% endfor %}
             </div>

@@ -1540,3 +1540,213 @@ select.form-control {
         text-align: center;
     }
 }
+
+/* ================================================================
+   UI AUDIT FIXES â€” native form controls + accessibility
+   Scope: presentation only; no selectors or markup that any route
+   or JavaScript depends on are changed.
+   ================================================================ */
+
+/* -- Accessibility: contrast --------------------------------------
+   --text-muted #6b7280 on the #0a0e17 page measures 3.99:1, below
+   the WCAG AA 4.5:1 minimum for text. #8b93a1 measures 6.24:1. */
+:root {
+    --text-muted: #8b93a1;
+}
+
+/* -- Native <select>: readable popup in Chrome / Edge / Firefox ----
+   The open option list is painted by the OS outside the page, on a
+   default WHITE surface â€” but <option> inherits the select's
+   near-white text color, giving white-on-white. The select itself
+   only looks dark because --bg-input is translucent white composited
+   over the dark page; the popup has no dark page behind it.
+
+   color-scheme: light tells the browser to paint the popup and its
+   hover/selection highlight with light-mode system colors â€” this is
+   what keeps the highlighted row readable in Chrome/Edge on Windows,
+   which ignore option:hover CSS entirely. The CLOSED control stays
+   dark because its background/color are author-set already. */
+select.form-control {
+    color-scheme: light;
+}
+
+select.form-control option {
+    background-color: #ffffff;   /* opaque: never composited over the page */
+    color: #111827;
+}
+
+/* Firefox honours these directly; Chrome/Edge use the OS highlight. */
+select.form-control option:checked,
+select.form-control option:hover {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+/* -- Native date inputs: visible calendar icon on the dark theme --
+   With the default light color-scheme, Chrome/Edge draw the picker
+   icon dark â€” invisible on the dark input. Dark scheme flips the
+   icon light and gives a dark, readable calendar popup. */
+input[type="date"].form-control {
+    color-scheme: dark;
+}
+
+/* -- Form consistency ----------------------------------------------
+   All controls share .form-control (padding, radius, focus), but
+   selects/dates/numbers can differ a few px in native height across
+   browsers. One min-height lines them up on the trek form grid. */
+.form-control {
+    min-height: 46px;
+    caret-color: #ffffff;
+}
+
+textarea.form-control {
+    min-height: 100px;   /* multiline fields stay taller */
+}
+
+/* Firefox dims placeholders with its own opacity; normalise. */
+.form-control::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+}
+
+/* -- Chrome/Edge autofill ------------------------------------------
+   The UA repaints autofilled fields beige with dark text regardless
+   of theme. -webkit-text-fill-color overrides the text; the giant
+   inset shadow repaints the background (the background property
+   itself is ignored during autofill). */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f9fafb;
+    caret-color: #f9fafb;
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-secondary) inset;
+    box-shadow: 0 0 0 1000px var(--bg-secondary) inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+/* -- Accessibility: visible keyboard focus -------------------------
+   Only .form-control:focus was styled; buttons and links relied on
+   faint UA defaults. :focus-visible shows the ring for keyboard
+   users without flashing it on every mouse click. #5eead4 measures
+   13:1 against the page background. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible,
+.btn-logout:focus-visible,
+.status-option:focus-within {
+    outline: 3px solid #5eead4;
+    outline-offset: 2px;
+}
+
+
+/* ================================================================
+   BOOTSTRAP GUARD + CHART CARDS (Chart.js dashboards)
+   Bootstrap 5 CSS now loads BEFORE this file (for the dashboard
+   grid/cards); these rules pin the few shared selectors where
+   Bootstrap's light-theme defaults would otherwise win.
+   ================================================================ */
+
+/* Bootstrap's .form-control:focus sets color: var(--bs-body-color)
+   (dark, light theme) and outspecifies our base .form-control rule â€”
+   without this line, input text turns dark the moment you type. */
+.form-control:focus {
+    color: #ffffff;
+}
+
+/* Bootstrap's .navbar-nav is flex-direction: column (it expects a
+   .navbar-expand-* wrapper to flip it); our navbar is always
+   horizontal. */
+.navbar-nav {
+    flex-direction: row;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.navbar-brand {
+    padding: 0;
+    margin-right: 0;
+}
+
+/* Replace Bootstrap's blue focus glow with the theme's ring. */
+.btn:focus,
+.form-control:focus {
+    box-shadow: 0 0 0 3px var(--accent-primary-glow);
+}
+
+/* â”€â”€ Chart Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.chart-grid {
+    margin-bottom: 2rem;
+}
+
+/* .card is Bootstrap's component (structure/radius); this skins it
+   for the dark theme â€” declared later, so it wins the color war. */
+.card.chart-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+    transition: border-color var(--transition-base);
+}
+
+.card.chart-card:hover {
+    border-color: var(--border-color-hover);
+}
+
+.chart-card-header {
+    margin-bottom: 1.25rem;
+}
+
+.chart-card-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.chart-card-header p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* The BODY owns the height; the canvas fills it. Chart.js runs with
+   maintainAspectRatio:false, so this is what makes charts responsive. */
+.chart-card-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.chart-card-body canvas {
+    max-width: 100%;
+}
+
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .card.chart-card {
+        padding: 1.15rem;
+    }
+
+    .chart-card-body {
+        min-height: 240px;   /* charts get room once stacked full width */
+    }
+}
+

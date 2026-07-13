@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="dashboard-header">
-    <h1>{{ '&#9998; Edit Trek' if action == 'edit' else '&#10133; Create New Trek' }}</h1>
+    {# Real Unicode, not HTML entities: these strings print through {{ }},
+       where autoescaping turns "&#9998;" into literal text. #}
+    <h1>{{ '✏ Edit Trek' if action == 'edit' else '➕ Create New Trek' }}</h1>
     <p>{{ 'Update trek details below' if action == 'edit' else 'Fill in the details to create a new trek' }}</p>
 </div>
 
@@ -68,7 +70,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary btn-action">{{ '&#10003; Update Trek' if action == 'edit' else '&#10133; Create Trek' }}</button>
+            <button type="submit" class="btn btn-primary btn-action">{{ '✓ Update Trek' if action == 'edit' else '➕ Create Trek' }}</button>
             <a href="{{ url_for('admin_bp.treks') }}" class="btn btn-secondary btn-action">Cancel</a>
         </div>
     </form>
