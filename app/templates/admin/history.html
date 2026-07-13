@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Trekking History - Trekk Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>&#128336; Trekking History</h1>
+    <p>Complete booking and trekking history across all users</p>
+</div>
+
+<!-- Filters -->
+<div class="search-container">
+    <form method="GET" action="{{ url_for('admin_bp.history') }}" class="search-form">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>Trekker</label>
+                <select name="user_id" class="form-control">
+                    <option value="">All Trekkers</option>
+                    {% for u in trekkers %}
+                    <option value="{{ u.id }}" {{ 'selected' if sel_user == u.id }}>{{ u.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Trek</label>
+                <select name="trek_id" class="form-control">
+                    <option value="">All Treks</option>
+                    {% for t in treks %}
+                    <option value="{{ t.id }}" {{ 'selected' if sel_trek == t.id }}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Booking Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {{ 'selected' if sel_status == s }}>{{ 'Booked' if s == 'confirmed' else s | title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group filter-group-btn">
+                <button type="submit" class="btn btn-primary btn-action">&#128269; Apply Filters</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if sel_user or sel_trek or sel_status %}
+<div class="results-info">
+    <span>{{ stats.total }} record{{ 's' if stats.total != 1 }} found</span>
+    <a href="{{ url_for('admin_bp.history') }}" class="btn btn-sm btn-secondary">Clear Filters</a>
+</div>
+{% endif %}
+
+<div class="stats-grid" style="margin-bottom: 1.5rem;">
+    <div class="stat-card blue">
+        <div class="stat-icon">&#128203;</div>
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total Records</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">&#9989;</div>
+        <div class="stat-value">{{ stats.active }}</div>
+        <div class="stat-label">Active Bookings</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="stat-icon">&#10003;</div>
+        <div class="stat-value">{{ stats.completed }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-card red">
+        <div class="stat-icon">&#10007;</div>
+        <div class="stat-value">{{ stats.cancelled }}</div>
+        <div class="stat-label">Cancelled</div>
+    </div>
+</div>
+
+{% if history_data %}
+<div class="data-table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Trekker</th>
+                <th>Trek</th>
+                <th>Location</th>
+                <th>Participants</th>
+                <th>Amount</th>
+                <th>Booking Status</th>
+                <th>Trek Status</th>
+                <th>Booked On</th>
+                <th>Completed / Cancelled</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in history_data %}
+            <tr>
+                <td>#{{ item.booking.id }}</td>
+                <td class="td-bold">{{ item.user.username if item.user else 'Deleted User' }}</td>
+                <td>{{ item.trek.name if item.trek else 'Deleted Trek' }}</td>
+                <td>{{ item.trek.location if item.trek and item.trek.location else '—' }}</td>
+                <td>{{ item.booking.number_of_participants }}</td>
+                <td>&#8377;{{ "%.0f"|format(item.booking.total_amount) }}</td>
+                <td><span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.status_label }}</span></td>
+                <td>
+                    {% if item.trek %}
+                    <span class="status-badge status-{{ item.trek.status }}">{{ item.trek.status }}</span>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+                <td>{{ item.booking.created_at.strftime('%d %b %Y') if item.booking.created_at else 'N/A' }}</td>
+                <td>
+                    {% if item.booking.completed_at %}
+                    &#10003; {{ item.booking.completed_at.strftime('%d %b %Y') }}
+                    {% elif item.booking.cancelled_at %}
+                    &#10007; {{ item.booking.cancelled_at.strftime('%d %b %Y') }}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);">
+    <div class="empty-icon">&#128336;</div>
+    <h3>No history records found</h3>
+    {% if sel_user or sel_trek or sel_status %}
+    <p>No booking records match these filters.</p>
+    <a href="{{ url_for('admin_bp.history') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">Clear Filters</a>
+    {% else %}
+    <p>Booking and trekking records will appear here once users start booking treks.</p>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

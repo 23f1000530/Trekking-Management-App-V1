@@ -11,11 +11,23 @@
 {% if history_data %}
 <div class="stats-grid" style="margin-bottom: 1.5rem;">
     <div class="stat-card purple">
-        <div class="stat-value">{{ history_data | selectattr('booking.booking_status', 'equalto', 'completed') | list | length }}</div>
+        <div class="stat-icon">&#10003;</div>
+        <div class="stat-value">{{ stats.completed }}</div>
         <div class="stat-label">Completed Treks</div>
     </div>
+    <div class="stat-card blue">
+        <div class="stat-icon">&#128197;</div>
+        <div class="stat-value">{{ stats.days_trekked }}</div>
+        <div class="stat-label">Days Trekked</div>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-icon">&#128178;</div>
+        <div class="stat-value">&#8377;{{ "%.0f"|format(stats.total_spent) }}</div>
+        <div class="stat-label">Total Spent</div>
+    </div>
     <div class="stat-card red">
-        <div class="stat-value">{{ history_data | selectattr('booking.booking_status', 'equalto', 'cancelled') | list | length }}</div>
+        <div class="stat-icon">&#10007;</div>
+        <div class="stat-value">{{ stats.cancelled }}</div>
         <div class="stat-label">Cancelled</div>
     </div>
 </div>
@@ -32,8 +44,8 @@
                 <th>Participants</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Payment</th>
-                <th>Date</th>
+                <th>Booked On</th>
+                <th>Completed / Cancelled On</th>
             </tr>
         </thead>
         <tbody>
@@ -52,9 +64,17 @@
                 <td>{{ item.trek.duration_days if item.trek else '—' }} day{{ 's' if item.trek and item.trek.duration_days != 1 }}</td>
                 <td>{{ item.booking.number_of_participants }}</td>
                 <td>&#8377;{{ "%.0f"|format(item.booking.total_amount) }}</td>
-                <td><span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.booking_status }}</span></td>
-                <td><span class="status-badge status-{{ item.booking.payment_status }}">{{ item.booking.payment_status }}</span></td>
+                <td><span class="status-badge status-{{ item.booking.booking_status }}">{{ item.booking.status_label }}</span></td>
                 <td>{{ item.booking.created_at.strftime('%d %b %Y') if item.booking.created_at else 'N/A' }}</td>
+                <td>
+                    {% if item.booking.completed_at %}
+                    &#10003; {{ item.booking.completed_at.strftime('%d %b %Y') }}
+                    {% elif item.booking.cancelled_at %}
+                    &#10007; {{ item.booking.cancelled_at.strftime('%d %b %Y') }}
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

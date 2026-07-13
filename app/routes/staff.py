@@ -14,6 +14,7 @@ Trek Staff routes for managing assigned treks:
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import current_user
 from app.utils.decorators import staff_required
+from app.utils.trek_status import commit_status_change, ALLOWED_TRANSITIONS
 from app import db
 from app.models.user import User
 from app.models.trek import Trek
@@ -141,13 +142,19 @@ def trek_detail(trek_id):
         })
 
     stats = {
-        'total_participants': len([p for p in participants if p['booking'].booking_status in ('pending', 'confirmed')]),
+        'total_participants': len([p for p in participants if p['booking'].is_active]),
         'confirmed': len([p for p in participants if p['booking'].booking_status == 'confirmed']),
         'pending': len([p for p in participants if p['booking'].booking_status == 'pending']),
+        'completed': len([p for p in participants if p['booking'].booking_status == 'completed']),
         'cancelled': len([p for p in participants if p['booking'].booking_status == 'cancelled']),
     }
 
-    return render_template('staff/trek_detail.html', trek=trek, participants=participants, stats=stats)
+    # Only offer transitions that are both legal from here and staff-permitted
+    next_statuses = [s for s in ALLOWED_TRANSITIONS.get(trek.status, ())
+                     if s in Trek.STAFF_STATUSES]
+
+    return render_template('staff/trek_detail.html', trek=trek, participants=participants,
+                           stats=stats, next_statuses=next_statuses)
 
 
 # ── Update Trek Slots ──────────────────────────────────────────────────
@@ -187,16 +194,13 @@ def update_status(trek_id):
         return redirect(url_for('staff_bp.dashboard'))
 
     new_status = request.form.get('status', trek.status)
-    valid_statuses = ['open', 'closed', 'ongoing', 'completed', 'cancelled']
+    notes = request.form.get('completion_notes', '').strip() or None
 
-    if new_status not in valid_statuses:
-        flash('Invalid status selected.', 'error')
-        return redirect(url_for('staff_bp.trek_detail', trek_id=trek_id))
-
-    old_status = trek.status
-    trek.status = new_status
-    db.session.commit()
-    flash(f'Trek status changed from "{old_status}" to "{new_status}".', 'success')
+    # Staff run treks they are assigned to; only an admin can approve/re-gate one.
+    _, message, category = commit_status_change(
+        trek, new_status, Trek.STAFF_STATUSES, completion_notes=notes
+    )
+    flash(message, category)
     return redirect(url_for('staff_bp.trek_detail', trek_id=trek_id))
 
 

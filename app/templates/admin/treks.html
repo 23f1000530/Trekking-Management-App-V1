@@ -26,6 +26,7 @@
                 <th>Price</th>
                 <th>Slots</th>
                 <th>Status</th>
+                <th>Lifecycle</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -41,7 +42,30 @@
                 <td>
                     <span class="slot-info">{{ trek.available_slots }}/{{ trek.max_slots }}</span>
                 </td>
-                <td><span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span></td>
+                <td>
+                    <span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span>
+                    {% if trek.completed_at %}
+                    <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">
+                        {{ trek.completed_at.strftime('%d %b %Y') }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="td-actions">
+                    {% set next_states = transitions.get(trek.status, ()) %}
+                    {% if next_states %}
+                        {% for state in next_states %}
+                        <form method="POST" action="{{ url_for('admin_bp.update_trek_status', trek_id=trek.id) }}" class="inline-form"
+                              onsubmit="return confirm('Move &quot;{{ trek.name }}&quot; to {{ state }}?{% if state == 'completed' %} All active bookings will be marked completed.{% elif state == 'cancelled' %} All active bookings will be cancelled.{% endif %}');">
+                            <input type="hidden" name="status" value="{{ state }}">
+                            <button type="submit" class="btn btn-sm {{ 'btn-danger' if state == 'cancelled' else 'btn-success' if state in ['approved', 'open', 'completed'] else 'btn-secondary' }}">
+                                {{ state | title }}
+                            </button>
+                        </form>
+                        {% endfor %}
+                    {% else %}
+                        <span class="text-muted">Final</span>
+                    {% endif %}
+                </td>
                 <td class="td-actions">
                     <a href="{{ url_for('admin_bp.edit_trek', trek_id=trek.id) }}" class="btn btn-sm btn-secondary" title="Edit">&#9998; Edit</a>
                     <form method="POST" action="{{ url_for('admin_bp.delete_trek', trek_id=trek.id) }}" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this trek? This action cannot be undone.');">

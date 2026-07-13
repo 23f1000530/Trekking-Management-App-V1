@@ -93,8 +93,8 @@ def browse_treks():
     location = request.args.get('location', '').strip()
     sort_by = request.args.get('sort', 'newest')
 
-    # Base query — only open treks
-    query = Trek.query.filter(Trek.status == 'open')
+    # Base query — a trek is only bookable while 'open'
+    query = Trek.query.filter(Trek.status == Trek.BOOKABLE_STATUS)
 
     # Search by name
     if search:
@@ -130,7 +130,7 @@ def browse_treks():
 
     # Get unique locations for filter dropdown
     all_locations = db.session.query(Trek.location).filter(
-        Trek.status == 'open',
+        Trek.status == Trek.BOOKABLE_STATUS,
         Trek.location.isnot(None)
     ).distinct().all()
     locations = sorted([loc[0] for loc in all_locations if loc[0]])
@@ -178,9 +178,9 @@ def book_trek(trek_id):
     """Book a trek with validation."""
     trek = Trek.query.get_or_404(trek_id)
 
-    # Validate trek is open
-    if trek.status != 'open':
-        flash('This trek is not currently accepting bookings.', 'error')
+    # A trek accepts bookings only while its status is 'open'
+    if trek.status != Trek.BOOKABLE_STATUS:
+        flash(f'This trek is not accepting bookings (status: {trek.status}).', 'error')
         return redirect(url_for('trekker_bp.trek_detail', trek_id=trek_id))
 
     # Validate slots available
@@ -287,10 +287,14 @@ def my_bookings():
 @trekker_bp.route('/history')
 @trekker_required
 def history():
-    """View completed trekking history."""
+    """
+    The current trekker's complete trekking history.
+
+    Scoped to current_user, so a trekker can only ever see their own record.
+    """
     bookings = Booking.query.filter(
         Booking.user_id == current_user.id,
-        Booking.booking_status.in_(['completed', 'cancelled'])
+        Booking.booking_status.in_(Booking.HISTORY_STATUSES)
     ).order_by(Booking.created_at.desc()).all()
 
     history_data = []
@@ -301,4 +305,15 @@ def history():
             'trek': trek,
         })
 
-    return render_template('trekker/history.html', history_data=history_data)
+    completed = [b for b in bookings if b.booking_status == 'completed']
+    stats = {
+        'completed': len(completed),
+        'cancelled': sum(1 for b in bookings if b.booking_status == 'cancelled'),
+        'days_trekked': sum(
+            Trek.query.get(b.trek_id).duration_days
+            for b in completed if Trek.query.get(b.trek_id)
+        ),
+        'total_spent': sum(b.total_amount for b in completed),
+    }
+
+    return render_template('trekker/history.html', history_data=history_data, stats=stats)

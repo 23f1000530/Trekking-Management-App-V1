@@ -45,31 +45,41 @@
             <h2>&#128260; Update Trek Status</h2>
         </div>
         <p class="current-status">Current status: <span class="status-badge status-{{ trek.status }}">{{ trek.status }}</span></p>
-        <form method="POST" action="{{ url_for('staff_bp.update_status', trek_id=trek.id) }}">
+
+        {% if trek.completed_at %}
+        <p class="text-muted">Completed on {{ trek.completed_at.strftime('%d %b %Y') }}.</p>
+        {% if trek.completion_notes %}
+        <p class="trek-full-description">{{ trek.completion_notes }}</p>
+        {% endif %}
+        {% endif %}
+
+        {% set labels = {'open': '&#128275; Open', 'closed': '&#128274; Closed', 'ongoing': '&#9889; Ongoing',
+                         'completed': '&#10003; Completed', 'cancelled': '&#10007; Cancelled'} %}
+        {% set next_states = next_statuses %}
+
+        {% if next_states %}
+        <form method="POST" action="{{ url_for('staff_bp.update_status', trek_id=trek.id) }}"
+              onsubmit="return confirm('Update this trek\'s status? Completing or cancelling it also updates every active booking.');">
             <div class="status-options">
-                <label class="status-option {{ 'selected' if trek.status == 'open' }}">
-                    <input type="radio" name="status" value="open" {{ 'checked' if trek.status == 'open' }}>
-                    <span class="status-option-label">&#128275; Open</span>
+                {% for state in next_states %}
+                <label class="status-option">
+                    <input type="radio" name="status" value="{{ state }}" required>
+                    <span class="status-option-label">{{ labels.get(state, state | title) | safe }}</span>
                 </label>
-                <label class="status-option {{ 'selected' if trek.status == 'closed' }}">
-                    <input type="radio" name="status" value="closed" {{ 'checked' if trek.status == 'closed' }}>
-                    <span class="status-option-label">&#128274; Closed</span>
-                </label>
-                <label class="status-option {{ 'selected' if trek.status == 'ongoing' }}">
-                    <input type="radio" name="status" value="ongoing" {{ 'checked' if trek.status == 'ongoing' }}>
-                    <span class="status-option-label">&#9889; Ongoing</span>
-                </label>
-                <label class="status-option {{ 'selected' if trek.status == 'completed' }}">
-                    <input type="radio" name="status" value="completed" {{ 'checked' if trek.status == 'completed' }}>
-                    <span class="status-option-label">&#10003; Completed</span>
-                </label>
-                <label class="status-option {{ 'selected' if trek.status == 'cancelled' }}">
-                    <input type="radio" name="status" value="cancelled" {{ 'checked' if trek.status == 'cancelled' }}>
-                    <span class="status-option-label">&#10007; Cancelled</span>
-                </label>
+                {% endfor %}
             </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label for="completion_notes">Completion Notes (recorded if you mark the trek completed)</label>
+                <textarea id="completion_notes" name="completion_notes" class="form-control" rows="2"
+                          placeholder="Summary, incidents, weather, etc."></textarea>
+            </div>
+
             <button type="submit" class="btn btn-primary btn-action" style="margin-top: 1rem;">Update Status</button>
         </form>
+        {% else %}
+        <p class="text-muted">This trek is {{ trek.status }} — its status is final and can no longer be changed.</p>
+        {% endif %}
     </div>
 
     <!-- Update Slots -->

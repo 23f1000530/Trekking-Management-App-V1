@@ -26,6 +26,7 @@
                     <li><a href="{{ url_for('admin_bp.staff') }}" class="{% if request.endpoint in ['admin_bp.staff', 'admin_bp.assign_staff'] %}active{% endif %}">&#128101; Staff</a></li>
                     <li><a href="{{ url_for('admin_bp.users') }}" class="{% if request.endpoint == 'admin_bp.users' %}active{% endif %}">&#128100; Users</a></li>
                     <li><a href="{{ url_for('admin_bp.bookings') }}" class="{% if request.endpoint == 'admin_bp.bookings' %}active{% endif %}">&#128203; Bookings</a></li>
+                    <li><a href="{{ url_for('admin_bp.history') }}" class="{% if request.endpoint == 'admin_bp.history' %}active{% endif %}">&#128336; History</a></li>
                     <li><a href="{{ url_for('admin_bp.search') }}" class="{% if request.endpoint == 'admin_bp.search' %}active{% endif %}">&#128269; Search</a></li>
                 </ul>
                 {% endif %}

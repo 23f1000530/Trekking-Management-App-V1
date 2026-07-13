@@ -13,6 +13,7 @@ Admin-only routes for full system management:
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import current_user
 from app.utils.decorators import admin_required
+from app.utils.trek_status import commit_status_change, ALLOWED_TRANSITIONS
 from app import db
 from app.models.user import User
 from app.models.trek import Trek
@@ -55,9 +56,10 @@ def dashboard():
 @admin_bp.route('/treks')
 @admin_required
 def treks():
-    """List all treks with management actions."""
+    """List all treks with management and lifecycle actions."""
     all_treks = Trek.query.order_by(Trek.created_at.desc()).all()
-    return render_template('admin/treks.html', treks=all_treks)
+    return render_template('admin/treks.html', treks=all_treks,
+                           transitions=ALLOWED_TRANSITIONS)
 
 
 @admin_bp.route('/treks/create', methods=['GET', 'POST'])
@@ -101,12 +103,13 @@ def create_trek():
             start_date=datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None,
             end_date=datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None,
             image_url=image_url if image_url else None,
-            status='open',
+            status='pending',
         )
 
         db.session.add(trek)
         db.session.commit()
-        flash(f'Trek "{name}" created successfully!', 'success')
+        flash(f'Trek "{name}" created and is pending approval. '
+              f'Approve it, then open it to start taking bookings.', 'success')
         return redirect(url_for('admin_bp.treks'))
 
     return render_template('admin/trek_form.html', trek=None, action='create')
@@ -313,13 +316,83 @@ def toggle_user_active(user_id):
     return redirect(url_for('admin_bp.users'))
 
 
+# ── Trek Status Lifecycle ─────────────────────────────────────────────
+@admin_bp.route('/treks/<int:trek_id>/status', methods=['POST'])
+@admin_required
+def update_trek_status(trek_id):
+    """Move a trek through its lifecycle (pending → approved → open → … → completed)."""
+    trek = Trek.query.get_or_404(trek_id)
+    new_status = request.form.get('status', '')
+    notes = request.form.get('completion_notes', '').strip() or None
+
+    _, message, category = commit_status_change(
+        trek, new_status, Trek.ADMIN_STATUSES, completion_notes=notes
+    )
+    flash(message, category)
+    return redirect(request.referrer or url_for('admin_bp.treks'))
+
+
 # ── Booking Management ────────────────────────────────────────────────
 @admin_bp.route('/bookings')
 @admin_required
 def bookings():
-    """View all booking records and trekking history."""
+    """View all booking records across every user."""
     all_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     return render_template('admin/bookings.html', bookings=all_bookings)
+
+
+# ── Trekking History ──────────────────────────────────────────────────
+@admin_bp.route('/history')
+@admin_required
+def history():
+    """
+    Complete trekking history across all users, with filters.
+
+    Unlike /bookings (a raw record list), this is the historical view: it can be
+    narrowed to a single trekker, a single trek, or a booking status so an admin
+    can answer "what has this user actually trekked?".
+    """
+    user_id = request.args.get('user_id', type=int)
+    trek_id = request.args.get('trek_id', type=int)
+    status = request.args.get('status', '')
+
+    query = Booking.query
+
+    if user_id:
+        query = query.filter(Booking.user_id == user_id)
+    if trek_id:
+        query = query.filter(Booking.trek_id == trek_id)
+    if status and status in Booking.STATUSES:
+        query = query.filter(Booking.booking_status == status)
+
+    records = query.order_by(Booking.created_at.desc()).all()
+
+    history_data = []
+    for booking in records:
+        history_data.append({
+            'booking': booking,
+            'trek': Trek.query.get(booking.trek_id),
+            'user': User.query.get(booking.user_id),
+        })
+
+    stats = {
+        'total': len(records),
+        'completed': sum(1 for b in records if b.booking_status == 'completed'),
+        'cancelled': sum(1 for b in records if b.booking_status == 'cancelled'),
+        'active': sum(1 for b in records if b.booking_status in Booking.ACTIVE_STATUSES),
+    }
+
+    return render_template(
+        'admin/history.html',
+        history_data=history_data,
+        stats=stats,
+        trekkers=User.query.filter_by(role='trekker').order_by(User.username).all(),
+        treks=Trek.query.order_by(Trek.name).all(),
+        statuses=Booking.STATUSES,
+        sel_user=user_id,
+        sel_trek=trek_id,
+        sel_status=status,
+    )
 
 
 # ── Search ────────────────────────────────────────────────────────────

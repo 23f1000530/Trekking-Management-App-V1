@@ -879,6 +879,12 @@ select.form-control {
     border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
+.status-badge.status-approved {
+    background: rgba(20, 184, 166, 0.15);
+    color: #2dd4bf;
+    border: 1px solid rgba(20, 184, 166, 0.3);
+}
+
 /* ── Difficulty Badges ───────────────────────────────────────────── */
 .difficulty-badge {
     display: inline-flex;
