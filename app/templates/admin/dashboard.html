@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/chart_card.html" import chart_card, chart_scripts %}
 
 {% block title %}Admin Dashboard - Trekk Management{% endblock %}
 
@@ -39,11 +40,39 @@
         <div class="stat-label">Total Bookings</div>
     </a>
 
-    <div class="stat-card teal">
-        <div class="stat-icon">&#9889;</div>
-        <div class="stat-value">{{ stats.active_treks }}</div>
-        <div class="stat-label">Active Treks</div>
-    </div>
+    <a href="{{ url_for('admin_bp.treks') }}" class="stat-card teal clickable">
+        <div class="stat-icon">&#128275;</div>
+        <div class="stat-value">{{ stats.open_treks }}</div>
+        <div class="stat-label">Open Treks</div>
+    </a>
+
+    <a href="{{ url_for('admin_bp.history') }}" class="stat-card purple clickable">
+        <div class="stat-icon">&#10003;</div>
+        <div class="stat-value">{{ stats.completed_treks }}</div>
+        <div class="stat-label">Completed Treks</div>
+    </a>
+
+    <a href="{{ url_for('admin_bp.bookings') }}" class="stat-card green clickable">
+        <div class="stat-icon">&#128178;</div>
+        <div class="stat-value">&#8377;{{ "{:,.0f}".format(stats.revenue) }}</div>
+        <div class="stat-label">Revenue</div>
+    </a>
+</div>
+
+<!-- Analytics -->
+<div class="section-header">
+    <h2>&#128200; Analytics</h2>
+</div>
+<div class="row g-4 chart-grid">
+    {{ chart_card('bookingStatusChart', 'Booking Status Distribution',
+                  'Across all bookings', col='col-12 col-lg-5',
+                  empty='No bookings yet.') }}
+    {{ chart_card('trekStatusChart', 'Treks by Status',
+                  'Where treks sit in the lifecycle', col='col-12 col-lg-7',
+                  empty='No treks yet.') }}
+    {{ chart_card('revenueChart', 'Revenue Trend',
+                  'Confirmed and completed bookings, last 6 months',
+                  height=300, col='col-12', empty='No revenue recorded yet.') }}
 </div>
 
 <!-- Quick Actions -->
@@ -102,4 +131,16 @@
     </table>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block charts %}
+{{ chart_scripts() }}
+<script>
+    // ONE fetch for the whole dashboard; every chart reads from that payload.
+    TrekkCharts.mount("{{ url_for('admin_bp.api_analytics') }}", function (data) {
+        TrekkCharts.doughnut('bookingStatusChart', data.booking_status);
+        TrekkCharts.bar('trekStatusChart', data.trek_status, { label: 'Treks' });
+        TrekkCharts.line('revenueChart', data.monthly_revenue, { label: 'Revenue', prefix: '₹' });
+    });
+</script>
 {% endblock %}

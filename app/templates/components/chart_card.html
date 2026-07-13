@@ -1,0 +1,39 @@
+{#
+    Reusable chart card.
+
+    Renders a Bootstrap column + card with a fixed-height canvas. The height
+    lives on the BODY, not the canvas: Chart.js runs with
+    maintainAspectRatio:false, so it fills its container — that is what makes
+    the charts responsive.
+
+    `data-empty` is the message TrekkCharts shows instead of an empty axis
+    when a series has no data.
+
+    Usage:
+        {% from "components/chart_card.html" import chart_card, chart_scripts %}
+        {{ chart_card('revenueChart', 'Revenue', 'Last 6 months', col='col-12 col-xl-8') }}
+#}
+{% macro chart_card(id, title, subtitle='', height=280, empty='No data yet.', col='col-12 col-lg-6') %}
+<div class="{{ col }}">
+    <div class="card chart-card">
+        <div class="chart-card-header">
+            <h3>{{ title }}</h3>
+            {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
+        </div>
+        <div class="chart-card-body" style="height: {{ height }}px;">
+            <canvas id="{{ id }}" class="chart-canvas"
+                    data-empty="{{ empty }}"
+                    role="img" aria-label="{{ title }}"></canvas>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+
+{#  Loads Chart.js + the shared components. Put inside the `charts` block. #}
+{% macro chart_scripts() %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+        integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4"
+        crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endmacro %}

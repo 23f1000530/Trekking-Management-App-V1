@@ -10,9 +10,11 @@ Admin-only routes for full system management:
 - Search across treks, staff, and users
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user
+from sqlalchemy.orm import joinedload
 from app.utils.decorators import admin_required
+from app.utils.analytics import admin_analytics
 from app.utils.trek_status import commit_status_change, ALLOWED_TRANSITIONS
 from app import db
 from app.models.user import User
@@ -29,27 +31,30 @@ admin_bp = Blueprint('admin_bp', __name__, url_prefix='/admin')
 @admin_bp.route('/dashboard')
 @admin_required
 def dashboard():
-    """Admin dashboard — overview of system stats."""
-    total_treks = Trek.query.count()
-    total_users = User.query.filter_by(role='trekker').count()
-    total_staff = User.query.filter_by(role='trek_staff').count()
-    pending_staff = User.query.filter_by(role='trek_staff', is_approved=False).count()
-    total_bookings = Booking.query.count()
-    active_treks = Trek.query.filter(Trek.status.in_(['open', 'ongoing'])).count()
+    """Admin dashboard — overview of system stats (charts fetch /admin/api/analytics)."""
+    # Same aggregate the charts use, so tiles and charts can never disagree —
+    # and it replaces six separate COUNT queries with three grouped ones.
+    stats = admin_analytics()['totals']
 
-    stats = {
-        'total_treks': total_treks,
-        'total_users': total_users,
-        'total_staff': total_staff,
-        'pending_staff': pending_staff,
-        'total_bookings': total_bookings,
-        'active_treks': active_treks,
-    }
-
-    # Get recent bookings for the dashboard
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+    # Eager-load user + trek: the template reads booking.user.username and
+    # booking.trek.name per row, which otherwise lazy-loads two rows at a time.
+    recent_bookings = (
+        Booking.query
+        .options(joinedload(Booking.user), joinedload(Booking.trek))
+        .order_by(Booking.created_at.desc())
+        .limit(5)
+        .all()
+    )
 
     return render_template('admin/dashboard.html', stats=stats, recent_bookings=recent_bookings)
+
+
+# ── Analytics (Chart.js data source) ──────────────────────────────────
+@admin_bp.route('/api/analytics')
+@admin_required
+def api_analytics():
+    """System-wide analytics for the admin dashboard charts."""
+    return jsonify(admin_analytics())
 
 
 # ── Trek Management ───────────────────────────────────────────────────
@@ -83,12 +88,20 @@ def create_trek():
             flash('Trek name is required.', 'error')
             return render_template('admin/trek_form.html', trek=None, action='create')
 
+        # Dates parse inside the same try: strptime raises ValueError on junk
+        # input, which previously escaped as a 500.
         try:
             duration_days = int(duration_days) if duration_days else 1
             max_slots = int(max_slots) if max_slots else 20
             price = float(price) if price else 0.0
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
         except ValueError:
-            flash('Invalid numeric values provided.', 'error')
+            flash('Invalid numeric or date values provided.', 'error')
+            return render_template('admin/trek_form.html', trek=None, action='create')
+
+        if duration_days < 1 or max_slots < 1 or price < 0:
+            flash('Duration and max slots must be at least 1, and price cannot be negative.', 'error')
             return render_template('admin/trek_form.html', trek=None, action='create')
 
         trek = Trek(
@@ -100,8 +113,8 @@ def create_trek():
             available_slots=max_slots,
             price=price,
             location=location if location else None,
-            start_date=datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None,
-            end_date=datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None,
+            start_date=start_date,
+            end_date=end_date,
             image_url=image_url if image_url else None,
             status='pending',
         )
@@ -128,22 +141,33 @@ def edit_trek(trek_id):
         trek.location = request.form.get('location', '').strip() or None
         trek.image_url = request.form.get('image_url', '').strip() or None
 
+        # Parse EVERYTHING before touching the model: strptime on junk input
+        # previously escaped as a 500, and a failed edit left half-applied
+        # numeric changes on the trek.
         try:
-            trek.duration_days = int(request.form.get('duration_days', trek.duration_days))
+            new_duration = int(request.form.get('duration_days', trek.duration_days))
             new_max = int(request.form.get('max_slots', trek.max_slots))
-            # Adjust available slots proportionally
-            diff = new_max - trek.max_slots
-            trek.max_slots = new_max
-            trek.available_slots = max(0, trek.available_slots + diff)
-            trek.price = float(request.form.get('price', trek.price))
+            new_price = float(request.form.get('price', trek.price))
+            start_raw = request.form.get('start_date', '')
+            end_raw = request.form.get('end_date', '')
+            new_start = datetime.strptime(start_raw, '%Y-%m-%d').date() if start_raw else None
+            new_end = datetime.strptime(end_raw, '%Y-%m-%d').date() if end_raw else None
         except ValueError:
-            flash('Invalid numeric values provided.', 'error')
+            flash('Invalid numeric or date values provided.', 'error')
             return render_template('admin/trek_form.html', trek=trek, action='edit')
 
-        start_date = request.form.get('start_date', '')
-        end_date = request.form.get('end_date', '')
-        trek.start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
-        trek.end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+        if new_duration < 1 or new_max < 1 or new_price < 0:
+            flash('Duration and max slots must be at least 1, and price cannot be negative.', 'error')
+            return render_template('admin/trek_form.html', trek=trek, action='edit')
+
+        trek.duration_days = new_duration
+        # Adjust available slots proportionally to the capacity change
+        diff = new_max - trek.max_slots
+        trek.max_slots = new_max
+        trek.available_slots = max(0, trek.available_slots + diff)
+        trek.price = new_price
+        trek.start_date = new_start
+        trek.end_date = new_end
 
         if not trek.name:
             flash('Trek name is required.', 'error')

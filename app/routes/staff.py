@@ -11,9 +11,10 @@ Trek Staff routes for managing assigned treks:
 - Access control: Only assigned staff can manage their treks
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user
 from app.utils.decorators import staff_required
+from app.utils.analytics import staff_analytics
 from app.utils.trek_status import commit_status_change, ALLOWED_TRANSITIONS
 from app import db
 from app.models.user import User
@@ -51,30 +52,43 @@ def dashboard():
         is_active=True,
     ).all()
 
-    # Build trek data with trekker counts
+    # Active-booking counts for ALL assigned treks in one grouped query,
+    # instead of one COUNT per trek inside the loop below (an N+1).
+    counts = dict(
+        db.session.query(Booking.trek_id, db.func.count(Booking.id))
+        .filter(
+            Booking.trek_id.in_([a.trek_id for a in assignments] or [-1]),
+            Booking.booking_status.in_(Booking.ACTIVE_STATUSES),
+        )
+        .group_by(Booking.trek_id)
+        .all()
+    )
+
     trek_data = []
-    total_trekkers = 0
     for assignment in assignments:
         trek = assignment.trek
-        trekker_count = Booking.query.filter(
-            Booking.trek_id == trek.id,
-            Booking.booking_status.in_(['pending', 'confirmed'])
-        ).count()
-        total_trekkers += trekker_count
         trek_data.append({
             'trek': trek,
-            'trekker_count': trekker_count,
+            'trekker_count': counts.get(trek.id, 0),
             'assignment': assignment,
         })
 
     stats = {
         'assigned_treks': len(assignments),
-        'total_trekkers': total_trekkers,
+        'total_trekkers': sum(counts.values()),
         'open_treks': sum(1 for td in trek_data if td['trek'].status == 'open'),
         'ongoing_treks': sum(1 for td in trek_data if td['trek'].status == 'ongoing'),
     }
 
     return render_template('staff/dashboard.html', stats=stats, trek_data=trek_data)
+
+
+# ── Analytics (Chart.js data source) ──────────────────────────────────
+@staff_bp.route('/api/analytics')
+@staff_required
+def api_analytics():
+    """Analytics scoped to this staff member's assigned treks."""
+    return jsonify(staff_analytics(current_user.id))
 
 
 # ── Profile ────────────────────────────────────────────────────────────

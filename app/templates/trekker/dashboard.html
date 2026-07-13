@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/chart_card.html" import chart_card, chart_scripts %}
 
 {% block title %}My Dashboard - Trekk Management{% endblock %}
 
@@ -32,6 +33,22 @@
         <div class="stat-value">{{ stats.cancelled_bookings }}</div>
         <div class="stat-label">Cancelled</div>
     </a>
+</div>
+
+<!-- Analytics -->
+<div class="section-header">
+    <h2>&#128200; My Analytics</h2>
+</div>
+<div class="row g-4 chart-grid">
+    {{ chart_card('historyChart', 'Trek History',
+                  'How your bookings have ended up', col='col-12 col-lg-5',
+                  empty='No bookings yet.') }}
+    {{ chart_card('trendChart', 'Monthly Booking Trend',
+                  'Bookings you made, last 6 months', col='col-12 col-lg-7',
+                  empty='No bookings yet.') }}
+    {{ chart_card('spendChart', 'Amount Spent',
+                  'Confirmed and completed bookings, last 6 months',
+                  height=280, col='col-12', empty='Nothing spent yet.') }}
 </div>
 
 <!-- Quick Actions -->
@@ -115,4 +132,15 @@
     <a href="{{ url_for('trekker_bp.browse_treks') }}" class="btn btn-primary btn-action" style="margin-top: 1rem;">&#9968; Browse Treks</a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block charts %}
+{{ chart_scripts() }}
+<script>
+    TrekkCharts.mount("{{ url_for('trekker_bp.api_analytics') }}", function (data) {
+        TrekkCharts.doughnut('historyChart', data.history);
+        TrekkCharts.bar('trendChart', data.monthly_bookings, { label: 'Bookings' });
+        TrekkCharts.line('spendChart', data.monthly_spend, { label: 'Spent', prefix: '₹' });
+    });
+</script>
 {% endblock %}

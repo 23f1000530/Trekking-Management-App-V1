@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "components/chart_card.html" import chart_card, chart_scripts %}
 
 {% block title %}Staff Dashboard - Trekk Management{% endblock %}
 
@@ -29,6 +30,19 @@
         <div class="stat-value">{{ stats.ongoing_treks }}</div>
         <div class="stat-label">Ongoing Treks</div>
     </div>
+</div>
+
+<!-- Analytics -->
+<div class="section-header">
+    <h2>&#128200; Analytics</h2>
+</div>
+<div class="row g-4 chart-grid">
+    {{ chart_card('participantsChart', 'Participants per Trek',
+                  'Active bookings on treks you run', col='col-12 col-lg-7',
+                  empty='No participants booked yet.') }}
+    {{ chart_card('staffBookingChart', 'Booking Status',
+                  'Across your assigned treks', col='col-12 col-lg-5',
+                  empty='No bookings yet.') }}
 </div>
 
 <!-- Assigned Treks -->
@@ -86,4 +100,15 @@
     <p>An admin will assign treks to you. Please check back later.</p>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block charts %}
+{{ chart_scripts() }}
+<script>
+    TrekkCharts.mount("{{ url_for('staff_bp.api_analytics') }}", function (data) {
+        TrekkCharts.bar('participantsChart', data.participants_per_trek,
+                        { label: 'Participants', horizontal: true });
+        TrekkCharts.doughnut('staffBookingChart', data.booking_status);
+    });
+</script>
 {% endblock %}

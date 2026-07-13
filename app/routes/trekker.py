@@ -10,9 +10,10 @@ Trekker routes for browsing, booking, and managing trek reservations:
 - Cancel bookings
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import current_user
 from app.utils.decorators import trekker_required
+from app.utils.analytics import trekker_analytics
 from app import db
 from app.models.user import User
 from app.models.trek import Trek
@@ -51,6 +52,14 @@ def dashboard():
 
     return render_template('trekker/dashboard.html', stats=stats,
                            upcoming_treks=upcoming_treks, bookings=my_bookings)
+
+
+# ── Analytics (Chart.js data source) ──────────────────────────────────
+@trekker_bp.route('/api/analytics')
+@trekker_required
+def api_analytics():
+    """Analytics scoped to the current trekker only."""
+    return jsonify(trekker_analytics(current_user.id))
 
 
 # ── Profile ────────────────────────────────────────────────────────────
