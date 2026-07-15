@@ -5,6 +5,8 @@ Initializes the Flask app, extensions (SQLAlchemy, Migrate, Login Manager),
 and registers blueprints.
 """
 
+import os
+
 from flask import Flask, redirect, url_for, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -24,6 +26,15 @@ def create_app(config_class=Config):
     """
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Ensure the SQLite database's parent directory exists (instance/ is
+    # gitignored, so it is missing on a fresh clone and SQLite cannot
+    # create it itself).
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if db_uri.startswith('sqlite:///'):
+        db_dir = os.path.dirname(db_uri.replace('sqlite:///', '', 1))
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
 
     # Initialize extensions with app
     db.init_app(app)
