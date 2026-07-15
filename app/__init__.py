@@ -49,6 +49,12 @@ def create_app(config_class=Config):
     # Import models so they are registered with SQLAlchemy
     from app import models  # noqa: F401
 
+    # Create any missing tables so a fresh clone has a working schema even
+    # if the app is started before seed_admin.py / migrate_db.py.
+    # create_all() is a no-op for tables that already exist.
+    with app.app_context():
+        db.create_all()
+
     # User loader callback for Flask-Login
     from app.models.user import User
 
